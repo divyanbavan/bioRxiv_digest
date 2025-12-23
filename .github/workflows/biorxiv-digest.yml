@@ -1,0 +1,45 @@
+name: Daily bioRxiv digest (8am Toronto)
+
+on:
+  schedule:
+    # GitHub Actions schedules are UTC. We run at both 12:00 and 13:00 UTC and the
+    # script gates on America/Toronto==08:xx to handle DST.
+    - cron: "0 12 * * *"
+    - cron: "0 13 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Run digest
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DIGEST_INTERESTS: ${{ secrets.DIGEST_INTERESTS }}
+
+          # Optional filters
+          BIORXIV_SERVER: ${{ secrets.BIORXIV_SERVER }}      # default: biorxiv
+          BIORXIV_CATEGORY: ${{ secrets.BIORXIV_CATEGORY }}  # optional (e.g. "neuroscience")
+          LOOKBACK_DAYS: ${{ secrets.LOOKBACK_DAYS }}        # default: 1
+          MAX_PAPERS_FOR_AI: ${{ secrets.MAX_PAPERS_FOR_AI }} # default: 60
+
+          # SMTP (any provider)
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}               # e.g. 587
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}             # optional; defaults to SMTP_USER
+
+        run: python scripts/biorxiv_digest.py
