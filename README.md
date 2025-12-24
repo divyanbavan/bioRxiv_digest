@@ -14,9 +14,12 @@ This digest creates AI summaries of each paper (using Gemini) to get a brief ove
 To setup the email digest, please follow the steps below
 
 ### Setting up the repository
+If you don't have any programming experience, the instructions below will walk you through how to get a private version of this repository without any code or downloads.
 
 1. Fork this repository with your GitHub account
-2. Once forked, go to Settings -> General -> Danger Zone -> **Change Visibility to Private**
+3. Once forked, go to Settings -> General -> Danger Zone -> **Leave fork network**
+4. Once the repository has been successfully unlinked, go to Settings -> General -> Danger Zone -> **Change visibility to private**
+5. Go to the 'Actions' tab and enable GitHub actions
 
 ### Getting a Gemini API Key
 To get a free Gemini API key, you need to use Google AI Studio. Make sure to keep this API key private.
