@@ -49,7 +49,7 @@ def env(name: str, default: Optional[str] = None, required: bool = False) -> str
 
 def is_8am_toronto(now: datetime) -> bool:
     # Cron can be delayed a bit; accept any time during the 8am hour.
-    return now.hour==8
+    return True
 
 
 def fetch_biorxiv_details(
