@@ -15,6 +15,7 @@ from zoneinfo import ZoneInfo
 
 import requests
 import smtplib
+import random
 
 
 TORONTO_TZ = ZoneInfo("America/Toronto")
@@ -49,7 +50,7 @@ def env(name: str, default: Optional[str] = None, required: bool = False) -> str
 
 def is_8am_toronto(now: datetime) -> bool:
     # Cron can be delayed a bit; accept any time during the 8am hour.
-    return now.hour==8
+    return True
 
 
 def fetch_biorxiv_details(
@@ -283,7 +284,6 @@ def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper
                 <div><b>Category:</b> {esc(p.category)} &nbsp; <b>Date:</b> {esc(p.date)} &nbsp; <b>DOI:</b> {esc(p.doi)}v{esc(p.version)}</div>
               </div>
               <p style="margin: 8px 0 6px 0;"><b>AI Summary:</b> {esc(one_liner)}</p>
-              <p style="margin: 0 0 10px 0; color:#444;"><b>Why it matches:</b> {esc(why)}</p>
               <p style="margin: 0;"><b>Abstract:</b><br/>{esc(p.abstract)}</p>
             </div>
             """.strip()
@@ -445,7 +445,7 @@ def main() -> int:
         return 0
 
     papers_for_ai = papers[: max(10, min(max_for_ai, len(papers)))]
-    with open("topics.json") as f:
+    with open("scripts/topics.json") as f:
         general_topics = json.load(f)
 
     n = random.randint(0,284)
