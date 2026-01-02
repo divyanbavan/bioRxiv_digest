@@ -223,11 +223,14 @@ def extract_json(text: str) -> Dict[str, Any]:
     return json.loads(m.group(0))
 
 
-def build_ai_prompt(interests: str, papers: List[Paper]) -> str:
+def build_ai_prompt(interests: str, papers: List[Paper], topics: List[Topic]) -> str:
     def clip(s: str, n: int) -> str:
         s = re.sub(r"\s+", " ", s).strip()
         return s[:n] + ("…" if len(s) > n else "")
 
+    n = random.randint(0,284)
+    general_topic = topics[n]
+    
     lines = []
     lines.append("You are a research assistant helping rank bioRxiv papers for a daily email digest.")
     lines.append("")
@@ -238,8 +241,8 @@ def build_ai_prompt(interests: str, papers: List[Paper]) -> str:
     lines.append("- Select the 5 most relevant papers to USER_INTERESTS. Favour papers which target major problems in their respective field, make novel contributions to their field, and have solid methodological rigor relative to the other papers in the list.")
     lines.append("- For each selected paper: produce a three sentence summary that is understandable to a second year undergraduate student in the field.")
     lines.append("- After this, write a short 'general_trends' section (3–6 bullet points) describing what existing paradigms and opinions are changed from the results of these papers. Think beyond the first-order conclusions of the paper, and think about what the consequences of these discoveries are (but do not speculate too much).")
-    lines.append("- Along with the 'general_trends' section, include a 'general_concept' section describing any ONE interesting concept from ANY field of study. Do this by generating 50 concepts that are non-introductory and non-popularized; avoid topics commonly taught at the undergraduate level or widely covered in popular science. Explicitly avoid canonical or overused examples (e.g., chaos-theory butterfly effect, natural selection, standard neural networks, basic thermodynamics, allostery, Michaelis–Menten kinetics). Finally, choose one concept from this list. The concept does not need to relate to the papers or to the user’s interests; treat this section as independent intellectual enrichment. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title, heading, or naming-only bullet. Bullets should emphasize structure, mechanisms, formal insights, or non-obvious implications, not introductory definitions. Use plain text only (no markdown, no headings, no formatting). Aim for a level of depth appropriate for a well-educated reader who wants a concise but nontrivial conceptual insight rather than a textbook overview.")
-    lines.append("- Finally, include a 'specific_concept' section describing any ONE advanced concept (graduate level) from USER_INTERESTS. Choose a concept that is talked about in one of the papers, non-introductory, and non-textbook (avoid canonical topics such as allostery, basic Bayesian inference, classic signaling pathways, etc.). The concept does not need to appear in or relate to any of the papers; treat this section as independent enrichment. After the concepts are generated, choose exactly one to write about. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title or heading bullet. Bullets should focus on mechanism, formal structure, or nuanced implications, not definitions aimed at beginners. Use plain text only (no markdown, no headings, no bold/italics).")
+    lines.append(f"- Along with the 'general_trends' section, include a 'general_concept' section explaining {general_topic}. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title, heading, or naming-only bullet. Bullets should emphasize structure, mechanisms, formal insights, or non-obvious implications, not introductory definitions. Use plain text only (no markdown, no headings, no formatting). Aim for a level of depth appropriate for a well-educated reader who wants a concise but nontrivial conceptual insight rather than a textbook overview.")
+    lines.append("- Finally, include a 'specific_concept' section describing any ONE advanced concept (graduate level) from USER_INTERESTS. Choose a concept that is non-introductory, and non-textbook (avoid canonical topics such as allostery, basic Bayesian inference, classic signaling pathways, etc.). The concept does not need to appear in or relate to any of the papers; treat this section as independent enrichment. After the concepts are generated, choose exactly one to write about. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title or heading bullet. Bullets should focus on mechanism, formal structure, or nuanced implications, not definitions aimed at beginners. Use plain text only (no markdown, no headings, no bold/italics).")
     lines.append("")
     lines.append("OUTPUT: Return ONLY valid JSON with this schema:")
     lines.append('{')
@@ -445,7 +448,9 @@ def main() -> int:
         return 0
 
     papers_for_ai = papers[: max(10, min(max_for_ai, len(papers)))]
-    prompt = build_ai_prompt(interests=interests, papers=papers_for_ai)
+    with open("topics.json") as f:
+        general_topics = json.load(f)
+    prompt = build_ai_prompt(interests=interests, papers=papers_for_ai, topics=general_topics)
 
     ai_text = call_gemini(prompt=prompt, api_key=gemini_key)
     ai = extract_json(ai_text)
