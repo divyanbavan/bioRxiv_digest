@@ -223,13 +223,10 @@ def extract_json(text: str) -> Dict[str, Any]:
     return json.loads(m.group(0))
 
 
-def build_ai_prompt(interests: str, papers: List[Paper], topics: List[Topic]) -> str:
+def build_ai_prompt(interests: str, papers: List[Paper], general_topic: str) -> str:
     def clip(s: str, n: int) -> str:
         s = re.sub(r"\s+", " ", s).strip()
         return s[:n] + ("…" if len(s) > n else "")
-
-    n = random.randint(0,284)
-    general_topic = topics[n]
     
     lines = []
     lines.append("You are a research assistant helping rank bioRxiv papers for a daily email digest.")
@@ -264,7 +261,7 @@ def build_ai_prompt(interests: str, papers: List[Paper], topics: List[Topic]) ->
     return "\n".join(lines)
 
 
-def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper: Dict[str, Paper], trends: List[str], general_concept: List[str], specific_concept: List[str]) -> str:
+def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper: Dict[str, Paper], trends: List[str], general_concept: List[str], specific_concept: List[str], general_topic: str) -> str:
     def esc(s: str) -> str:
         return html.escape(s or "")
 
@@ -309,19 +306,19 @@ def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper
         {''.join(items_html)}
 
         <hr style="margin: 22px 0;" />
-        <h3 style="margin: 0 0 8px 0;">General trends</h3>
+        <h3 style="margin: 0 0 8px 0;">General Trends</h3>
         <ul style="margin: 0; padding-left: 18px;">
           {trends_html}
         </ul>
 
         <hr style="margin: 22px 0;" />
-        <h3 style="margin: 0 0 8px 0;">General concept</h3>
+        <h3 style="margin: 0 0 8px 0;">General Concept: {esc(general_topic)}</h3>
         <ul style="margin: 0; padding-left: 18px;">
           {conceptg_html}
         </ul>
 
         <hr style="margin: 22px 0;" />
-        <h3 style="margin: 0 0 8px 0;">Specific concept</h3>
+        <h3 style="margin: 0 0 8px 0;">Specific Concept</h3>
         <ul style="margin: 0; padding-left: 18px;">
           {concepts_html}
         </ul>
@@ -450,7 +447,10 @@ def main() -> int:
     papers_for_ai = papers[: max(10, min(max_for_ai, len(papers)))]
     with open("topics.json") as f:
         general_topics = json.load(f)
-    prompt = build_ai_prompt(interests=interests, papers=papers_for_ai, topics=general_topics)
+
+    n = random.randint(0,284)
+    today_topic = general_topics[n]
+    prompt = build_ai_prompt(interests=interests, papers=papers_for_ai, general_topic=today_topic)
 
     ai_text = call_gemini(prompt=prompt, api_key=gemini_key)
     ai = extract_json(ai_text)
@@ -472,7 +472,7 @@ def main() -> int:
     subject_date = now_local.strftime("%Y-%m-%d")
     subject = f"bioRxiv digest: ({subject_date})"
 
-    html_body = build_email_html(now_local=now_local, top=top_papers, id_to_paper=id_to_paper, trends=trends, general_concept=general_concept, specific_concept=specific_concept)
+    html_body = build_email_html(now_local=now_local, top=top_papers, id_to_paper=id_to_paper, trends=trends, general_concept=general_concept, specific_concept=specific_concept, general_topic=today_topic)
     send_email(subject=subject, html_body=html_body)
 
     print("[info] Digest sent.")
