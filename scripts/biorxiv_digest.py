@@ -282,17 +282,9 @@ def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper
                 <div><b>Authors:</b> {esc(p.authors)}</div>
                 <div><b>Category:</b> {esc(p.category)} &nbsp; <b>Date:</b> {esc(p.date)} &nbsp; <b>DOI:</b> {esc(p.doi)}v{esc(p.version)}</div>
               </div>
-              <p style="margin: 8px 0 6px 0;"><b>AI Summary:</b> {esc(one_liner)}</p>
-
-              <!-- Collapsible abstract using details/summary -->
-              <details style="margin: 0; padding: 0;">
-                <summary style="cursor: pointer; font-weight: bold; margin: 0; padding: 0; list-style: none;">
-                  Abstract
-                </summary>
-                <div style="margin-top: 8px; font-size: 13px; color: #333; white-space: pre-wrap;">
-                  {esc(p.abstract)}
-                </div>
-              </details>
+              <p style="margin: 8px 0 6px 0;"><b>AI one-liner:</b> {esc(one_liner)}</p>
+              <p style="margin: 0 0 10px 0; color:#444;"><b>Why it matches:</b> {esc(why)}</p>
+              <p style="margin: 0;"><b>Abstract:</b><br/>{esc(p.abstract)}</p>
             </div>
             """.strip()
         )
