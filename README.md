@@ -1,12 +1,12 @@
 # bioRxiv digest 🧬
-Automatically have papers from bioRxiv sent to your email at 8am ET, personalized to your interests. Each email also contains general trends, a general concept, and an interest-based concept so you can continue building up your knowledge.
+Automatically have papers from bioRxiv sent to your email at 8am ET, personalized to your interests. Each email also explains a new idea, general concept, and interest-based concept so you can continue building up your knowledge base.
 
 Each email contains:
 
 - Five papers selected based on user interests, scientific impact, and robustness
-- A list of general trends extrapolated from the results of the papers
+- An idea that is made possible by the results of one or more of the papers
 - AI explanation of a general concept from any field, meant to boost breadth knowledge
-- AI explanation of a concept in user interests, meant to boost depth knowledge
+- AI explanation of a concept in your interests, meant to boost depth knowledge
 
 This digest creates AI summaries of each paper (using Gemini) to get a brief overview of the paper. Abstracts and links to the full paper are also available for further exploration.
 
@@ -14,12 +14,9 @@ This digest creates AI summaries of each paper (using Gemini) to get a brief ove
 To setup the email digest, please follow the steps below
 
 ### Setting up the repository
-If you don't have any programming experience, the instructions below will walk you through how to get a private version of this repository without any code or downloads.
 
-1. Fork this repository with your GitHub account
-3. Once forked, go to Settings -> General -> Danger Zone -> **Leave fork network**
-4. Once the repository has been successfully unlinked, go to Settings -> General -> Danger Zone -> **Change visibility to private**
-5. Go to the 'Actions' tab and enable GitHub actions
+1. Click 'Use this template' (button is above the 'About' section)
+2. Choose a name for the repository and set visibility to private
 
 ### Getting a Gemini API Key
 To get a free Gemini API key, you need to use Google AI Studio. Make sure to keep this API key private.
@@ -42,18 +39,25 @@ To enable this setting, **make sure you have 2 factor authentication enabled for
 
 ### Activating the Digest
 
-In GitHub, go to Settings -> Security -> Secrets and variables -> Actions
+In your GitHub repository, go to Settings -> Security -> Secrets and variables -> Actions
 
-To get the digest running, setup the following secrets by clicking "New repository secret"
+To get the digest running, setup the following secrets by clicking "New repository secret":
 
-- DIGEST_INTERESTS: what you are interested in hearing about (eg. immunology, single-cell transcriptomics, mRNA vaccines, etc.)
-- EMAIL_TO: the email you want to receive the digest
-- SMTP_HOST: smtp.gmail.com
-- SMTP_PORT: 587
 - SMTP_USER: the email you set SMTP with
 - SMTP_PASSWORD: the app password Google gave to use SMTP
 - GEMINI_API_KEY: the API key from Google AI Studio
 
-Congratulations, you should be receiving an email digest every day at 8am EST!
+Optional settings:
+
+- EMAIL_TO: the email address you want to receive the digest in
+- EMAIL_CC: if you want to copy anyone into the digests
+- EMAIL_BCC: if you want to blind copy anyone into the digests
+- DIGEST_INTERESTS: write your interests and the AI will give papers that follow them
+- LOOKBACK_DAYS: how many days of bioRxiv papers do you want to cover (setting to more than 1 may lead to repeats in the digest)
+- MAX_PAPERS_FOR_AI: the number of papers Gemini will receive for filtering (setting this number too high may result in the model exceeding context limits)
+- SMTP_HOST: if you want to setup a different hosting service
+- SMTP_PORT: port for the different hosting service
+
+Congratulations, you should be receiving an email digest every day at 8am ET. Let me know if you use this by giving a star!
 
 If you feel that something is lacking, feel free to make open an issue or make a PR to the main repository.

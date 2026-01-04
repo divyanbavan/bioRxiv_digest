@@ -238,8 +238,8 @@ def build_ai_prompt(interests: str, papers: List[Paper], general_topic: str) -> 
     lines.append("TASK:")
     lines.append("- Select the 5 most relevant papers to USER_INTERESTS. Favour papers which target major problems in their respective field, make novel contributions to their field, and have solid methodological rigor relative to the other papers in the list.")
     lines.append("- For each selected paper: produce a three sentence summary that is understandable to a second year undergraduate student in the field.")
-    lines.append("- After this, write a short 'general_trends' section (3–6 bullet points) describing what existing paradigms and opinions are changed from the results of these papers. Think beyond the first-order conclusions of the paper, and think about what the consequences of these discoveries are (but do not speculate too much).")
-    lines.append(f"- Along with the 'general_trends' section, include a 'general_concept' section explaining {general_topic}. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title, heading, or naming-only bullet. Bullets should emphasize structure, mechanisms, formal insights, or non-obvious implications, not introductory definitions. Use plain text only (no markdown, no headings, no formatting). Aim for a level of depth appropriate for a well-educated reader who wants a concise but nontrivial conceptual insight rather than a textbook overview.")
+    lines.append("- After this, write a short 'new_possibility' section (3 bullet points) explaining ONE idea that is now possible because of the results of one or more paper(s). The first bullet should give an overview of the idea, the second bullet should give a technical breakdown incorporating information from the paper(s), and the third bullet should talk about implementation.")
+    lines.append(f"- Along with the 'new_possibility' section, include a 'general_concept' section explaining {general_topic}. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title, heading, or naming-only bullet. Bullets should emphasize structure, mechanisms, formal insights, or non-obvious implications, not introductory definitions. Use plain text only (no markdown, no headings, no formatting). Aim for a level of depth appropriate for a well-educated reader who wants a concise but nontrivial conceptual insight rather than a textbook overview.")
     lines.append("- Finally, include a 'specific_concept' section describing any ONE advanced concept (graduate level) from USER_INTERESTS. Choose a concept that is non-introductory, and non-textbook (avoid canonical topics such as allostery, basic Bayesian inference, classic signaling pathways, etc.). The concept does not need to appear in or relate to any of the papers; treat this section as independent enrichment. After the concepts are generated, choose exactly one to write about. Write 3–4 bullet points only. The first bullet should immediately begin explaining the concept; do not use a title or heading bullet. Bullets should focus on mechanism, formal structure, or nuanced implications, not definitions aimed at beginners. Use plain text only (no markdown, no headings, no bold/italics).")
     lines.append("")
     lines.append("OUTPUT: Return ONLY valid JSON with this schema:")
@@ -248,7 +248,7 @@ def build_ai_prompt(interests: str, papers: List[Paper], general_topic: str) -> 
     lines.append('    {"id": "P01", "summary": "..."},')
     lines.append('    {"id": "P02", "summary": "..."}')
     lines.append('  ],')
-    lines.append('  "general_trends": ["...", "..."],')
+    lines.append('  "new_possibility": ["...", "..."],')
     lines.append('  "general_concept": ["...", "..."],')
     lines.append('  "specific_concept": ["...", "..."]')
     lines.append('}')
@@ -262,7 +262,7 @@ def build_ai_prompt(interests: str, papers: List[Paper], general_topic: str) -> 
     return "\n".join(lines)
 
 
-def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper: Dict[str, Paper], trends: List[str], general_concept: List[str], specific_concept: List[str], general_topic: str) -> str:
+def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper: Dict[str, Paper], idea: List[str], general_concept: List[str], specific_concept: List[str], general_topic: str) -> str:
     def esc(s: str) -> str:
         return html.escape(s or "")
 
@@ -289,7 +289,7 @@ def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper
             """.strip()
         )
 
-    trends_html = "".join(f"<li>{esc(t)}</li>" for t in trends if str(t).strip())
+    idea_html = "".join(f"<li>{esc(t)}</li>" for t in idea if str(t).strip())
     conceptg_html = "".join(f"<li>{esc(t)}</li>" for t in general_concept if str(t).strip())
     concepts_html = "".join(f"<li>{esc(t)}</li>" for t in specific_concept if str(t).strip())
     date_str = now_local.strftime("%Y-%m-%d")
@@ -306,9 +306,9 @@ def build_email_html(now_local: datetime, top: List[Dict[str, Any]], id_to_paper
         {''.join(items_html)}
 
         <hr style="margin: 22px 0;" />
-        <h3 style="margin: 0 0 8px 0;">General Trends</h3>
+        <h3 style="margin: 0 0 8px 0;">New Possibility</h3>
         <ul style="margin: 0; padding-left: 18px;">
-          {trends_html}
+          {idea_html}
         </ul>
 
         <hr style="margin: 22px 0;" />
@@ -349,13 +349,13 @@ def send_email(subject: str, html_body: str) -> None:
 
     Uses SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASSWORD, EMAIL_FROM (optional).
     """
-    smtp_host = env("SMTP_HOST", required=True)
+    smtp_host = env("SMTP_HOST", "smtp.gmail.com") or "smtp.gmail.com"
     smtp_port = int(env("SMTP_PORT", "587") or "587")
     smtp_user = env("SMTP_USER", required=True)
     smtp_password = env("SMTP_PASSWORD", required=True)
 
     # Recipients: allow comma or semicolon separated lists
-    email_to_raw = env("EMAIL_TO", required=True)
+    email_to_raw = env("EMAIL_TO", smtp_user) or smtp_user
     email_cc_raw = env("EMAIL_CC", None)        # optional
     email_bcc_raw = env("EMAIL_BCC", None)      # optional
 
@@ -398,40 +398,13 @@ def send_email(subject: str, html_body: str) -> None:
         # Explicitly pass the recipient list to ensure delivery to CC/BCC too
         s.send_message(msg, from_addr=email_from, to_addrs=all_recipients)
 
-
-def send_email(subject: str, html_body: str) -> None:
-    smtp_host = env("SMTP_HOST", required=True)
-    smtp_port = int(env("SMTP_PORT", "587") or "587")
-    smtp_user = env("SMTP_USER", required=True)
-    smtp_password = env("SMTP_PASSWORD", required=True)
-    email_to = env("EMAIL_TO", required=True)
-    email_from = env("EMAIL_FROM", smtp_user) or smtp_user
-
-    msg = EmailMessage()
-    msg["Subject"] = subject
-    msg["From"] = email_from
-    msg["To"] = email_to
-
-    # Plain text fallback
-    msg.set_content("Your email client does not support HTML. Please view this digest in an HTML-capable client.")
-    msg.add_alternative(html_body, subtype="html")
-
-    context = ssl.create_default_context()
-    with smtplib.SMTP(smtp_host, smtp_port, timeout=60) as s:
-        s.ehlo()
-        s.starttls(context=context)
-        s.ehlo()
-        s.login(smtp_user, smtp_password)
-        s.send_message(msg)
-
-
 def main() -> int:
     now_local = datetime.now(TORONTO_TZ)
     if not is_8am_toronto(now_local):
         print(f"[info] Not 8am in Toronto (now: {now_local.isoformat()}); exiting.")
         return 0
 
-    interests = env("DIGEST_INTERESTS", required=True)
+    interests = env("DIGEST_INTERESTS", "the most impactful papers published") or "the most impactful papers published"
     gemini_key = env("GEMINI_API_KEY", required=True)
 
     server = env("BIORXIV_SERVER", "biorxiv") or "biorxiv"
@@ -456,14 +429,14 @@ def main() -> int:
     ai = extract_json(ai_text)
 
     top_papers = ai.get("top_papers", [])
-    trends = ai.get("general_trends", [])
+    idea = ai.get("new_possibility", [])
     general_concept = ai.get("general_concept", [])
     specific_concept = ai.get("specific_concept", [])
 
     if not isinstance(top_papers, list):
         raise RuntimeError("Gemini returned invalid 'top_papers' format.")
-    if not isinstance(trends, list):
-        trends = [str(trends)]
+    if not isinstance(idea, list):
+        idea = [str(idea)]
 
     # Only keep the first 5 selections
     top_papers = top_papers[:5]
@@ -472,7 +445,7 @@ def main() -> int:
     subject_date = now_local.strftime("%Y-%m-%d")
     subject = f"bioRxiv digest: ({subject_date})"
 
-    html_body = build_email_html(now_local=now_local, top=top_papers, id_to_paper=id_to_paper, trends=trends, general_concept=general_concept, specific_concept=specific_concept, general_topic=today_topic)
+    html_body = build_email_html(now_local=now_local, top=top_papers, id_to_paper=id_to_paper, idea=idea, general_concept=general_concept, specific_concept=specific_concept, general_topic=today_topic)
     send_email(subject=subject, html_body=html_body)
 
     print("[info] Digest sent.")
