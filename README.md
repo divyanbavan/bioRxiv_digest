@@ -43,7 +43,7 @@ In your GitHub repository, go to Settings -> Security -> Secrets and variables -
 
 To get the digest running, setup the following secrets by clicking "New repository secret":
 
-- SMTP_USER: the email you set SMTP with
+- SMTP_USER: the email you set SMTP with (also the email you will receive the digest to)
 - SMTP_PASSWORD: the app password Google gave to use SMTP
 - GEMINI_API_KEY: the API key from Google AI Studio
 
